@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trello</title>
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="box">
+            <h2>Cần làm</h2>
+            <ul id="todoList" class="list">
+                <!-- <li id='todo-0' class="list__item" draggable="true">
+                    0
+                </li>
+                <li id='todo-1' class="list__item" draggable="true">
+                    1
+                </li> -->
+
+
+
+            </ul>
+            <div class="addnew-btn">
+                + Thêm thẻ
+            </div>
+            <form class="addnew-form">
+                <input id="input" type="text" class="title" placeholder="Nhập tiêu đề cho thẻ...">
+                <div class="btn-group">
+                    <button type="button" class="add-btn">Thêm thẻ</button>
+                    <span class="exit-btn">x</span>
+                </div>
+            </form>
+        </div>
+        <div class="box">
+            <h2>Đang làm</h2>
+            <ul id="doingList" class="list">
+
+            </ul>
+            <div class="addnew-btn">
+                + Thêm thẻ
+            </div>
+            <form class="addnew-form">
+                <input type="text" class="title" placeholder="Nhập tiêu đề cho thẻ...">
+                <div class="btn-group">
+                    <button type="button" class="add-btn">Thêm thẻ</button>
+                    <span class="exit-btn">x</span>
+                </div>
+            </form>
+        </div>
+        <div class="box">
+            <h2>Đã làm</h2>
+            <ul id="completedList" class="list">
+
+            </ul>
+            <div class="addnew-btn">
+                + Thêm thẻ
+            </div>
+            <form class="addnew-form">
+                <input type="text" class="title" placeholder="Nhập tiêu đề cho thẻ...">
+                <div class="btn-group">
+                    <button type="button" class="add-btn">Thêm thẻ</button>
+                    <span class="exit-btn">x</span>
+                </div>
+            </form>
+        </div>
+
+        <div id="editModal" class="modal">
+            <div class="modal__content">
+                <span class="close-modal-btn"><ion-icon name="close-outline"></ion-icon></span>
+                <form action="#" id="editForm">
+                    <input type="text" class="edit">
+                    <div class="modal__content-bottom">
+                        <button id="saveBtn" class="btn">Lưu</button>
+                        <span class="notification success"></span>
+
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div id="deleteModal" class="modal">
+            <div class="modal__content">
+                <span class="close-modal-btn"><ion-icon name="close-outline"></ion-icon></span>
+                <h2>Bạn có muốn xóa task này không?</h2>
+                <div class="modal__content-bottom">
+                    <button id="deleteBtn" class="btn">Xóa</button>
+                    <button id="exitDeleteBtn" class="btn">Thoát</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="main.js"></script>
+</body>
+
+</html>
