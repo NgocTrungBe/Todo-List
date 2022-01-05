@@ -34,7 +34,6 @@ html {
 }
 
 .box ul {
-    height: auto;
     margin-top: 30px;
     padding: 0;
     list-style: none;
@@ -72,31 +71,34 @@ html {
     background: rgba(245, 241, 241, 0.1);
 }
 
-.box ul li span {
+.box ul li button {
+    cursor: pointer;
     position: relative;
     float: right;
     width: 20px;
     text-align: center;
     transition: 0.3s;
-    z-index: 99;
-    overflow: hidden;
+    outline: none;
+    border: none;
+    font-size: 17px;
+    background: #fff;
 }
 
-.box ul li span#editBtn {
+.box ul li button#editBtn {
     margin-left: 10px;
     color: rgb(24, 160, 53);
 }
 
-.box ul li span#deleteBtn {
+.box ul li button#deleteBtn {
     margin-left: 10px;
     color: rgb(218, 27, 27);
 }
 
-.box ul li span ion-icon {
+.box ul li button ion-icon {
     z-index: 0;
 }
 
-.box ul li span:hover {
+.box ul li button:hover {
     float: right;
     width: 40px;
     text-align: center;
@@ -216,6 +218,7 @@ html {
     background-color: #fff;
     padding: 20px;
     border-radius: 8px;
+    text-align: center;
 }
 
 .modal__content .close-modal-btn {
@@ -238,7 +241,7 @@ html {
 }
 
 .modal__content form {
-    margin-top: 40px;
+    margin-top: 25px;
     display: flex;
     flex-direction: column;
 }

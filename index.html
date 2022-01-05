@@ -15,12 +15,19 @@
         <div class="box">
             <h2>Cần làm</h2>
             <ul id="todoList" class="list">
-                <!-- <li id='todo-0' class="list__item" draggable="true">
-                    0
+                <li id='todo-0' data-index="0" class="list__item todo" draggable="true">
+                    ok
+
+                    <button id="editBtn"><ion-icon name="pencil-outline"></ion-icon></button>
+                    <button id="deleteBtn"><ion-icon name="trash-outline"></ion-icon></button>
                 </li>
-                <li id='todo-1' class="list__item" draggable="true">
-                    1
-                </li> -->
+
+                <li id='todo-1' data-index="1" class="list__item todo" draggable="true">
+                    haha
+
+                    <button id="editBtn"><ion-icon name="pencil-outline"></ion-icon></button>
+                    <button id="deleteBtn"><ion-icon name="trash-outline"></ion-icon></button>
+                </li>
 
 
 
@@ -39,6 +46,12 @@
         <div class="box">
             <h2>Đang làm</h2>
             <ul id="doingList" class="list">
+                <li id='todo-2' data-index="2" class="list__item todo" draggable="true">
+                    kkk
+
+                    <button id="editBtn"><ion-icon name="pencil-outline"></ion-icon></button>
+                    <button id="deleteBtn"><ion-icon name="trash-outline"></ion-icon></button>
+                </li>
 
             </ul>
             <div class="addnew-btn">
@@ -55,6 +68,12 @@
         <div class="box">
             <h2>Đã làm</h2>
             <ul id="completedList" class="list">
+                <li id='todo-3' data-index="3" class="list__item todo" draggable="true">
+                    no
+
+                    <button id="editBtn"><ion-icon name="pencil-outline"></ion-icon></button>
+                    <button id="deleteBtn"><ion-icon name="trash-outline"></ion-icon></button>
+                </li>
 
             </ul>
             <div class="addnew-btn">
@@ -72,6 +91,7 @@
         <div id="editModal" class="modal">
             <div class="modal__content">
                 <span class="close-modal-btn"><ion-icon name="close-outline"></ion-icon></span>
+                <h2>Thay đổi Task!</h2>
                 <form action="#" id="editForm">
                     <input type="text" class="edit">
                     <div class="modal__content-bottom">
@@ -87,12 +107,13 @@
                 <span class="close-modal-btn"><ion-icon name="close-outline"></ion-icon></span>
                 <h2>Bạn có muốn xóa task này không?</h2>
                 <div class="modal__content-bottom">
-                    <button id="deleteBtn" class="btn">Xóa</button>
+                    <button id="deleteButton" class="btn">Xóa</button>
                     <button id="exitDeleteBtn" class="btn">Thoát</button>
 
                 </div>
             </div>
         </div>
+
     </div>
 
 

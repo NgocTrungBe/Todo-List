@@ -8,32 +8,136 @@ let doingList = document.querySelector('#doingList');
 let completedList = document.querySelector('#completedList');
 let allList = [todoList, doingList, completedList];
 let boxs = document.querySelectorAll('.box');
-// let listItems = document.querySelectorAll('.list .list__item');
 let inputs = document.querySelectorAll('input');
-let dragItem;
+
 //modal
-
 let modals = document.querySelectorAll('.modal');
-
-let modalContent = document.querySelector('.modal__content');
+let deleteModal = document.querySelector('#deleteModal');
+let modalContents = document.querySelectorAll('.modal__content');
 let closeModalBtns = document.querySelectorAll('.close-modal-btn');
 let editInput = document.querySelector('.edit');
 let saveBtn = document.querySelector('#saveBtn');
-let deleteBtn = document.querySelector('#deleteBtn');
+let deleteBtn = document.querySelector('#deleteButton');
+let exitDeleteBtn = document.querySelector('#exitDeleteBtn');
 let notification = document.querySelector('.notification');
+
+//
+let dragCard;
+let shadowCard = document.createElement("LI");
+let shadowCardHeight = 0;
+let draggingCardHeight = 0;
+let editingCardId;
+let deletingCardId;
+
 // status variable
 const TODO_STATUS = "todo";
 const DOING_STATUS = "doing";
 const COMPLETED_STATUS = "completed";
 
 let todos = [{
-    id: 'todo-0',
-    title: 'no',
-    status: TODO_STATUS
-}];
+        id: 'todo-0',
+        title: 'no',
+        status: TODO_STATUS
+    },
+    {
+        id: 'todo-1',
+        title: 'Mơ xinh đẹp',
+        status: TODO_STATUS
+    },
+    {
+        id: 'todo-2',
+        title: 'Mơ đẹp gái',
+        status: DOING_STATUS
+    },
+];
 
-let editItemId = null;
-let deleteItemId = null;
+
+
+renderItem();
+let listItems = document.querySelectorAll('.list .list__item');
+let editBtns = document.querySelectorAll('.list__item #editBtn');
+let deleteBtns = document.querySelectorAll('.list__item #deleteBtn');
+
+listItems.forEach((item, indexOfItem) => {
+
+    // item drag start
+    item.addEventListener('dragstart', dragStart);
+
+    item.addEventListener('dragend', dragEnd);
+
+
+    editBtns[indexOfItem].addEventListener('click', (e) => editButtonHandle(item));
+
+    deleteBtns[indexOfItem].addEventListener('click', () => deleteButtonHandle(item));
+
+});
+
+
+allList.forEach((list, index) => {
+    boxs[index].addEventListener('dragover', (e) => dragOver(list, index, e));
+    boxs[index].addEventListener('dragenter', dragEnter);
+    boxs[index].addEventListener('drop', (e) => drop(list, index, e));
+
+})
+
+function dragStart() {
+    dragCard = this;
+    draggingCardHeight = this.clientHeight;
+    setTimeout(() => {
+        this.classList.add('dragging');
+        this.style.display = 'none';
+
+    }, 0);
+}
+
+function dragEnd() {
+    setTimeout(() => {
+        deleteShadow();
+        this.classList.remove('dragging');
+        this.style.display = 'block';
+        dragCard = null;
+        draggingCardHeight = 0;
+
+    }, 0);
+}
+
+function dragOver(list, index, e) {
+    e.preventDefault();
+    setTimeout(() => {
+        let cardAfterDraggingCard = getCardAfterDraggingCard(list, e.clientY);
+        shadowCard.className = "shadow";
+        shadowCard.style.height = draggingCardHeight + 'px';
+        shadowCard.style.background = 'rgba(0,0,0,0.1)';
+        shadowCard.style.borderRadius = '5px';
+        if (cardAfterDraggingCard == null) {
+            list.appendChild(shadowCard);
+        } else {
+            cardAfterDraggingCard.parentNode.insertBefore(shadowCard, cardAfterDraggingCard);
+        }
+    }, 0)
+}
+
+function dragEnter(e) {
+    e.preventDefault();
+}
+
+
+function drop(list, index, e) {
+    e.preventDefault();
+    let draggingCard = document.querySelector('.list__item.dragging');
+    let cardAfterDraggingCard = getCardAfterDraggingCard(list, e.clientY);
+    if (cardAfterDraggingCard == null) {
+        list.appendChild(draggingCard);
+    } else {
+        cardAfterDraggingCard.parentNode.insertBefore(draggingCard, cardAfterDraggingCard);
+    }
+    dragCard.classList.remove(dragCard.classList[1]);
+    let itemNewStatus = getStatusByList(index);
+    dragCard.classList.add(`${itemNewStatus}`);
+    changeItemStatus(dragCard.id, itemNewStatus);
+}
+
+
 
 
 addNewButtons.forEach((button, index) => {
@@ -55,194 +159,123 @@ addNewButtons.forEach((button, index) => {
 
     })
 });
-
 addNewItemBtn.forEach((button, index) => {
     button.addEventListener('click', function() {
-
         let title = inputs[index].value;
         addNewItem(index, title);
         inputs[index].value = "";
         addNewButtons[index].classList.remove('active');
         addNewForms[index].classList.remove('open');
-        drag();
+
     })
 })
-
 closeModalBtns.forEach((button, index) => {
     button.addEventListener('click', function(e) {
-        modals[index].classList.remove('open');
-        notification.classList.remove('success');
-        notification.classList.remove('fail');
-        editItemId = null;
-        deleteItemId = null;
+        closeModal();
     });
 
 })
 
 
+function editButtonHandle(item) {
 
+    let itemRect = item.getBoundingClientRect();
+    openModal(item.id, item.innerText, itemRect.x, itemRect.y + itemRect.height, 'editModal');
+}
 
+function deleteButtonHandle(item) {
+    let itemRect = item.getBoundingClientRect();
+    openModal(item.id, '', itemRect.x, itemRect.y + itemRect.height, 'deleteModal');
 
-function drag() {
-    let listItems = document.querySelectorAll('.list .list__item');
-    let editBtns = document.querySelectorAll('.list__item #editBtn');
-    let deleteBtns = document.querySelectorAll('.list__item #deleteBtn');
-    let shadowItem = document.createElement("LI");
-    let shadowItemHeight = 0;
-    let prevItem = null;
+}
 
+function getCardAfterDraggingCard(list, yDraggingCard) {
+    let listCards = [...list.querySelectorAll('.list__item:not(.dragging)')];
+    return listCards.reduce((closestCard, nextCard) => {
+        let nextCardRect = nextCard.getBoundingClientRect();
+        let offset = yDraggingCard - nextCardRect.top - nextCardRect.height / 2;
 
+        if (offset < 0 && offset > closestCard.offset) {
+            return { offset, element: nextCard }
+        } else {
 
-    if (listItems.length > 0) {
-        listItems.forEach((item, index) => {
+            return closestCard;
+        }
 
-            // item drag start
-            item.addEventListener('dragstart', function(e) {
-                dragItem = item;
-                prevItem = { id: e.target.id, clientHeight: item.clientHeight };
-                setTimeout(() => {
-                    item.style.display = 'none';
-                }, 0);
-            });
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
 
-            item.addEventListener('dragend', function() {
-                setTimeout(() => {
-                    dragItem.style.display = 'block';
-                    dragItem = null;
-                    prevItem = null;
-                }, 0)
-            });
-
-
-
-            editBtns[index].addEventListener('click', function(e) {
-                let paths = e.path;
-                let itemID;
-                let itemTitle;
-                let positionX = 0;
-                let positionY = 0;
-                e.stopPropagation();
-                for (let i = 0; i < paths.length; i++) {
-                    if (paths[i].nodeName === "LI" && paths[i].classList[0] === 'list__item') {
-
-                        itemID = paths[i].id;
-                        itemTitle = paths[i].innerText;
-                        positionX = paths[i].offsetLeft;
-                        positionY = paths[i].offsetTop + paths[i].clientHeight;
-                        break;
-                    }
-                }
-                openModal(itemID, itemTitle, positionX, positionY, 'editModal');
-            });
-
-            deleteBtns[index].addEventListener('click', function(e) {
-
-                let paths = e.path;
-                let itemID;
-                e.stopPropagation();
-                for (let i = 0; i < paths.length; i++) {
-                    if (paths[i].nodeName === "LI" && paths[i].classList[0] === 'list__item') {
-                        itemID = paths[i].id;
-                        positionX = paths[i].offsetLeft;
-                        positionY = paths[i].offsetTop + paths[i].clientHeight;
-                        break;
-                    }
-                }
-                openModal(itemID, '', positionX, positionY, 'deleteModal');
-            });
-
-        });
-
-
-        allList.forEach((list, index) => {
-            list.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                if (prevItem != null) {
-                    setTimeout(() => {
-                        shadowItem.style.height = prevItem.clientHeight + 'px';
-                        shadowItem.style.background = 'rgba(0,0,0,0.1)';
-                        shadowItem.style.borderRadius = '5px';
-                        list.style.height = prevItem.clientHeight;
-                        list.appendChild(shadowItem);
-                    }, 0)
-
-                }
-
-            });
-            list.addEventListener('dragenter', function(e) {
-                e.preventDefault();
-
-
-            });
-
-            list.addEventListener('drop', function(e) {
-                list.append(dragItem);
-                list.removeChild(shadowItem);
-                let itemNewStatus = getStatusByList(index);
-                if (prevItem != null && itemNewStatus != '') {
-                    changeItemStatus(prevItem.id, itemNewStatus);
-                    drag();
-                }
-
-            });
-
-        })
-    }
 }
 
 
+function deleteShadow() {
+    allList.forEach((list) => {
+        let children = list.children;
+        for (let i = 0; i < children.length; i++) {
+            if ((children[i].className).includes('shadow')) {
+                list.removeChild(children[i]);
+                break;
+            }
+        }
+    });
+}
 
 function openModal(itemID, itemTitle, positionX, positionY, caseModal) {
-
     if (positionX != undefined && positionY != undefined) {
-        modalContent.style.top = positionY + 'px';
-        modalContent.style.left = positionX + 'px';
-
-        editInput.value = itemTitle;
-
-
-        if (caseModal === 'editModal') {
-            modals[0].classList.add('open');
-            editItemId = itemID;
+        for (let i = 0; i < modals.length; i++) {
+            if ((modals[i].id).includes(caseModal)) {
+                if ((modals[i].id) === 'editModal') {
+                    editInput.value = itemTitle;
+                    editingCardId = itemID;
+                }
+                if ((modals[i].id) === 'deleteModal') {
+                    deletingCardId = itemID;
+                }
+                modalContents[i].style.top = positionY + 'px';
+                modalContents[i].style.left = positionX + 'px';
+                modals[i].classList.add('open');
+                break;
+            }
         }
-        if (caseModal === 'deleteModal') {
-            modals[1].classList.add('open');
-            deleteItemId = itemID;
-        }
-
     }
+}
+saveBtn.addEventListener('click', editItemById);
+deleteBtn.addEventListener('click', deleteItemById);
+exitDeleteBtn.addEventListener('click', (e) => {
+    closeModal();
+});
 
+
+function closeModal() {
+    let modalIsOpen = document.querySelector('.modal.open');
+    modalIsOpen.classList.remove('open');
+    notification.classList.remove('success');
+    notification.classList.remove('fail');
+    editingCardId = null;
+    deleteItemId = null;
 
 }
-saveBtn.addEventListener('click', () => editItemById());
-deleteBtn.addEventListener('click', () => deleteItemById());
 
 function editItemById() {
-
     let isSuccess = false;
-    let itemTitle = editInput.value;
-    if (editItemId != null && itemTitle != '') {
+    let cardTitle = editInput.value;
+    if (editingCardId != null && cardTitle != '') {
         for (let i = 0; i < todos.length; i++) {
-            if ((todos[i].id).includes(editItemId)) {
-
-
-                todos[i].title = itemTitle;
+            if ((todos[i].id).includes(editingCardId)) {
+                todos[i].title = cardTitle;
                 isSuccess = true;
                 break;
             }
         }
     }
     if (isSuccess) {
+        let editingCard = document.querySelector(`.list #${editingCardId}`);
+        updateElement(editingCard, cardTitle);
         notification.classList.remove('fail');
         notification.classList.add('success');
         notification.innerText = 'Cập nhật thành công!';
-        renderItem();
-        drag();
         let timeout = setTimeout(function() {
-            modals[0].classList.remove('open');
-            notification.classList.remove('success');
             isSuccess = false;
-            editItemId = null;
+            closeModal();
             clearTimeout(timeout);
         }, 1500);
 
@@ -250,7 +283,6 @@ function editItemById() {
         isSuccess = false;
         notification.classList.add('fail');
         notification.innerText = 'Cập nhật thất bại!';
-
     }
 
 
@@ -259,10 +291,9 @@ function editItemById() {
 
 function deleteItemById() {
     let isSuccess = false;
-    if (deleteItemId != null) {
+    if (deletingCardId != null) {
         for (let i = 0; i < todos.length; i++) {
-            if ((todos[i].id).includes(deleteItemId)) {
-
+            if ((todos[i].id).includes(deletingCardId)) {
                 todos.splice(i, 1);
                 isSuccess = true;
                 break;
@@ -270,8 +301,9 @@ function deleteItemById() {
         }
     }
     if (isSuccess) {
-        renderItem();
-        drag();
+
+        let deletingCard = document.querySelector(`.list #${deletingCardId}`);
+        deletingCard.parentNode.removeChild(deletingCard);
         let timeout = setTimeout(function() {
             modals[1].classList.remove('open');
             isSuccess = false;
@@ -284,11 +316,23 @@ function deleteItemById() {
         modals[1].classList.remove('open');
 
     }
-
-
-
 }
 
+function updateElement(card, cardTitle) {
+    let editBtn = document.createElement('button');
+    let deleteBtn = document.createElement('button');
+    //buttons
+    editBtn.innerHTML = `<ion-icon name="pencil-outline"></ion-icon>`;
+    editBtn.setAttribute('id', 'editBtn');
+    deleteBtn.innerHTML = `<ion-icon name="trash-outline"></ion-icon>`;
+    deleteBtn.setAttribute('id', 'deleteBtn');
+    card.innerText = cardTitle;
+    card.appendChild(editBtn);
+    card.appendChild(deleteBtn);
+    //
+    editBtn.addEventListener('click', () => editButtonHandle(card));
+    deleteBtn.addEventListener('click', () => deleteButtonHandle(card))
+}
 
 function getStatusByList(index) {
     if (index === 0) {
@@ -302,23 +346,16 @@ function getStatusByList(index) {
 }
 
 function changeItemStatus(itemID, status) {
-    let isSuccess = false;
-    for (let i = 0; i < todos.length; i++) {
-        if (todos[i].id === itemID) {
-            todos[i].status = status;
-            isSuccess = true;
-            break;
+    if (itemID != '' && status != '') {
+        for (let i = 0; i < todos.length; i++) {
+            if (todos[i].id === itemID) {
+                todos[i].status = status;
+                isSuccess = true;
+                break;
+            }
         }
     }
-    if (isSuccess) {
-        renderItem();
-        isSuccess = false;
-    }
-
 }
-
-
-
 
 function addNewItem(caseList, title) {
     let id = todos.length == 0 ? 'todo-' + 0 : 'todo-' + todos.length;
@@ -331,8 +368,6 @@ function addNewItem(caseList, title) {
             break;
         case 1:
             status = DOING_STATUS;
-
-
             break;
         case 2:
             status = COMPLETED_STATUS;
@@ -350,38 +385,57 @@ function addNewItem(caseList, title) {
         isSuccess = true;
     }
     if (isSuccess) {
-        renderItem();
+        let newCard = document.createElement('LI');
+        //item
+        newCard.setAttribute('id', id);
+        newCard.setAttribute('class', `list__item ${status}`);
+        newCard.setAttribute('draggable', true);
+        updateElement(newCard, title);
+        //buttons
+
+        if (status === TODO_STATUS) {
+            todoList.appendChild(newCard);
+        }
+        if (status === DOING_STATUS) {
+
+            doingList.appendChild(newCard);
+        }
+        if (status === COMPLETED_STATUS) {
+
+            completedList.appendChild(newCard);
+        }
+        newCard.addEventListener('dragstart', dragStart);
+        newCard.addEventListener('dragend', dragEnd);
+
         isSuccess = false;
     }
-
-
-
-
 }
 
-function renderItem() {
 
+
+function renderItem() {
     todoList.innerHTML = todos.map((item, index) => {
         if (item.status === TODO_STATUS) {
             return `
-            <li id =${item.id} class="list__item ${item.status}" draggable="true">
+            <li id =${item.id} data-index=${index} class="list__item ${item.status}" draggable="true">
                                ${item.title}
-                            
-                               <span id="editBtn" ><ion-icon name="pencil-outline"></ion-icon></span>
-                               <span id="deleteBtn" ><ion-icon name="trash-outline"></ion-icon></span>
+    
+                               <button id="editBtn"><ion-icon name="pencil-outline"></ion-icon></button>
+                               <button id="deleteBtn"><ion-icon name="trash-outline"></ion-icon></button>
             </li>
-        
-            
+    
+    
             `
         }
     }).join('');
     doingList.innerHTML = todos.map((item, index) => {
         if (item.status === DOING_STATUS) {
             return `
-            <li id =${item.id} class="list__item ${item.status}" draggable="true">
+            <li id =${item.id} data-index=${index} class="list__item ${item.status}" draggable="true">
                                ${item.title}
-                               <span id="editBtn" ><ion-icon name="pencil-outline"></ion-icon></span>
-                               <span id="deleteBtn" ><ion-icon name="trash-outline"></ion-icon></span>
+    
+                               <button id="editBtn"><ion-icon name="pencil-outline"></ion-icon></button>
+                               <button id="deleteBtn"><ion-icon name="trash-outline"></ion-icon></button>
             </li>
             `
         }
@@ -390,17 +444,13 @@ function renderItem() {
     completedList.innerHTML = todos.map((item, index) => {
         if (item.status === COMPLETED_STATUS) {
             return `
-            <li id =${item.id} class="list__item ${item.status}" draggable="true">
+            <li id =${item.id} data-index=${index} class="list__item ${item.status}" draggable="true">
                                ${item.title}
-                               <span id="editBtn" ><ion-icon name="pencil-outline"></ion-icon></span>
-                               <span id="deleteBtn" ><ion-icon name="trash-outline"></ion-icon></span>
+    
+                               <button id="editBtn"><ion-icon name="pencil-outline"></ion-icon></button>
+                               <button id="deleteBtn"><ion-icon name="trash-outline"></ion-icon></button>
             </li>
             `
         }
     }).join('');
-
-
-
 }
-renderItem();
-drag();
